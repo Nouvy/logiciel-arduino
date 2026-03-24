@@ -16,75 +16,120 @@ import shutil
 
 ARDUINO_CLI = shutil.which("arduino-cli") or "/opt/homebrew/bin/arduino-cli"
 
+# --- Charte graphique CESI ---
+CESI_YELLOW = "#fbe216"
+CESI_DARK = "#1a1a1a"
+CESI_BLACK = "#000000"
+CESI_WHITE = "#ffffff"
+CESI_GRAY_BG = "#f5f5f5"
+CESI_GRAY_TEXT = "#526e7a"
+CESI_GRAY_BORDER = "#e0e0e0"
+CESI_GREEN = "#2e7d32"
+CESI_RED = "#c62828"
+CESI_YELLOW_HOVER = "#e6cf00"
+
+
 class ArduinoAssistant:
     def __init__(self, root):
         self.root = root
-        self.root.title("Arduino Assistant")
-        self.root.geometry("820x720")
-        self.root.configure(bg="#1e1e2e")
+        self.root.title("Arduino Assistant - CESI")
+        self.root.geometry("860x760")
+        self.root.configure(bg=CESI_WHITE)
+        self.root.minsize(700, 600)
 
         self.board_fqbn = None
         self.board_port = None
 
-        style = {"bg": "#1e1e2e", "fg": "#cdd6f4", "font": ("Helvetica", 13)}
-        entry_style = {"bg": "#313244", "fg": "#cdd6f4", "insertbackground": "#cdd6f4",
-                        "font": ("Helvetica", 13), "relief": "flat", "bd": 8}
+        style = {"bg": CESI_WHITE, "fg": CESI_DARK, "font": ("Helvetica", 13)}
+        entry_style = {"bg": CESI_GRAY_BG, "fg": CESI_DARK, "insertbackground": CESI_DARK,
+                        "font": ("Helvetica", 13), "relief": "solid", "bd": 1,
+                        "highlightthickness": 2, "highlightcolor": CESI_YELLOW,
+                        "highlightbackground": CESI_GRAY_BORDER}
+
+        # --- Yellow top bar ---
+        top_bar = tk.Frame(root, bg=CESI_YELLOW, height=6)
+        top_bar.pack(fill="x")
+        top_bar.pack_propagate(False)
 
         # --- Header ---
-        header = tk.Frame(root, bg="#1e1e2e")
-        header.pack(fill="x", padx=20, pady=(15, 5))
-        tk.Label(header, text="Arduino Assistant", font=("Helvetica", 22, "bold"),
-                 bg="#1e1e2e", fg="#89b4fa").pack(side="left")
+        header = tk.Frame(root, bg=CESI_WHITE)
+        header.pack(fill="x", padx=24, pady=(18, 8))
+        tk.Label(header, text="ARDUINO", font=("Helvetica", 26, "bold"),
+                 bg=CESI_WHITE, fg=CESI_DARK).pack(side="left")
+        tk.Label(header, text=" ASSISTANT", font=("Helvetica", 26),
+                 bg=CESI_WHITE, fg=CESI_GRAY_TEXT).pack(side="left")
+        tk.Label(header, text="  CESI", font=("Helvetica", 14, "bold"),
+                 bg=CESI_WHITE, fg=CESI_YELLOW).pack(side="left", padx=(10, 0))
+
+        # --- Separator ---
+        tk.Frame(root, bg=CESI_GRAY_BORDER, height=1).pack(fill="x", padx=24, pady=(0, 12))
 
         # --- API Key ---
-        api_frame = tk.Frame(root, bg="#1e1e2e")
-        api_frame.pack(fill="x", padx=20, pady=(5, 5))
-        tk.Label(api_frame, text="Cle API :", **style).pack(side="left")
+        api_frame = tk.Frame(root, bg=CESI_WHITE)
+        api_frame.pack(fill="x", padx=24, pady=(0, 8))
+        tk.Label(api_frame, text="Cle API :", font=("Helvetica", 12, "bold"),
+                 bg=CESI_WHITE, fg=CESI_DARK).pack(side="left")
         self.api_key_var = tk.StringVar()
         self.api_entry = tk.Entry(api_frame, textvariable=self.api_key_var, show="*",
-                                   width=50, **entry_style)
+                                   width=55, **entry_style)
         self.api_entry.pack(side="left", padx=(10, 0), fill="x", expand=True)
 
         # --- Board status ---
-        board_frame = tk.Frame(root, bg="#1e1e2e")
-        board_frame.pack(fill="x", padx=20, pady=(5, 5))
+        board_frame = tk.Frame(root, bg=CESI_WHITE)
+        board_frame.pack(fill="x", padx=24, pady=(0, 8))
+        self.board_indicator = tk.Label(board_frame, text="\u25cf", font=("Helvetica", 14),
+                                         bg=CESI_WHITE, fg=CESI_GRAY_TEXT)
+        self.board_indicator.pack(side="left")
         self.board_label = tk.Label(board_frame, text="Arduino : recherche...",
-                                     font=("Helvetica", 12), bg="#1e1e2e", fg="#a6adc8")
-        self.board_label.pack(side="left")
+                                     font=("Helvetica", 12), bg=CESI_WHITE, fg=CESI_GRAY_TEXT)
+        self.board_label.pack(side="left", padx=(4, 0))
         self.detect_btn = tk.Button(board_frame, text="Detecter", command=self.detect_board,
-                                     bg="#45475a", fg="#cdd6f4", font=("Helvetica", 11),
-                                     relief="flat", bd=4, cursor="hand2")
+                                     bg=CESI_DARK, fg=CESI_WHITE, font=("Helvetica", 11, "bold"),
+                                     relief="flat", bd=0, padx=14, pady=4, cursor="hand2",
+                                     activebackground="#333333", activeforeground=CESI_WHITE)
         self.detect_btn.pack(side="right")
 
         # --- Prompt ---
         tk.Label(root, text="Decris ce que tu veux que l'Arduino fasse :",
-                 **style).pack(anchor="w", padx=20, pady=(10, 3))
-        self.prompt_text = scrolledtext.ScrolledText(root, height=5, wrap="word", **entry_style)
-        self.prompt_text.pack(fill="x", padx=20, pady=(0, 5))
+                 font=("Helvetica", 12, "bold"), bg=CESI_WHITE, fg=CESI_DARK
+                 ).pack(anchor="w", padx=24, pady=(8, 4))
+        self.prompt_text = scrolledtext.ScrolledText(root, height=4, wrap="word", **entry_style)
+        self.prompt_text.pack(fill="x", padx=24, pady=(0, 8))
 
-        # --- Buttons ---
-        btn_frame = tk.Frame(root, bg="#1e1e2e")
-        btn_frame.pack(fill="x", padx=20, pady=5)
-        self.send_btn = tk.Button(btn_frame, text="Generer et Envoyer sur Arduino",
-                                   command=self.on_send, bg="#89b4fa", fg="#1e1e2e",
-                                   font=("Helvetica", 14, "bold"), relief="flat", bd=6,
-                                   cursor="hand2", activebackground="#74c7ec")
+        # --- Main button ---
+        btn_frame = tk.Frame(root, bg=CESI_WHITE)
+        btn_frame.pack(fill="x", padx=24, pady=(0, 8))
+        self.send_btn = tk.Button(btn_frame, text="GENERER ET ENVOYER SUR ARDUINO",
+                                   command=self.on_send, bg=CESI_YELLOW, fg=CESI_BLACK,
+                                   font=("Helvetica", 14, "bold"), relief="flat", bd=0,
+                                   padx=20, pady=12, cursor="hand2",
+                                   activebackground=CESI_YELLOW_HOVER,
+                                   activeforeground=CESI_BLACK)
         self.send_btn.pack(fill="x")
 
         # --- Code display ---
-        tk.Label(root, text="Code genere :", **style).pack(anchor="w", padx=20, pady=(10, 3))
+        tk.Label(root, text="Code genere :", font=("Helvetica", 12, "bold"),
+                 bg=CESI_WHITE, fg=CESI_DARK).pack(anchor="w", padx=24, pady=(8, 4))
         self.code_text = scrolledtext.ScrolledText(root, height=10, wrap="word",
-                                                     bg="#181825", fg="#a6e3a1",
-                                                     insertbackground="#a6e3a1",
-                                                     font=("Courier", 12), relief="flat", bd=8)
-        self.code_text.pack(fill="both", expand=True, padx=20, pady=(0, 5))
+                                                     bg=CESI_DARK, fg=CESI_YELLOW,
+                                                     insertbackground=CESI_YELLOW,
+                                                     selectbackground=CESI_YELLOW,
+                                                     selectforeground=CESI_BLACK,
+                                                     font=("Courier", 12), relief="solid", bd=1)
+        self.code_text.pack(fill="both", expand=True, padx=24, pady=(0, 8))
 
         # --- Log ---
-        tk.Label(root, text="Journal :", **style).pack(anchor="w", padx=20, pady=(5, 3))
-        self.log_text = scrolledtext.ScrolledText(root, height=6, wrap="word",
-                                                    bg="#181825", fg="#fab387",
-                                                    font=("Courier", 11), relief="flat", bd=8)
-        self.log_text.pack(fill="both", padx=20, pady=(0, 15))
+        tk.Label(root, text="Journal :", font=("Helvetica", 12, "bold"),
+                 bg=CESI_WHITE, fg=CESI_DARK).pack(anchor="w", padx=24, pady=(4, 4))
+        self.log_text = scrolledtext.ScrolledText(root, height=5, wrap="word",
+                                                    bg=CESI_GRAY_BG, fg=CESI_DARK,
+                                                    font=("Courier", 11), relief="solid", bd=1)
+        self.log_text.pack(fill="both", padx=24, pady=(0, 6))
+
+        # --- Yellow bottom bar ---
+        bottom_bar = tk.Frame(root, bg=CESI_YELLOW, height=4)
+        bottom_bar.pack(fill="x", side="bottom")
+        bottom_bar.pack_propagate(False)
 
         # Auto-detect board on start
         self.root.after(500, self.detect_board)
@@ -94,7 +139,8 @@ class ArduinoAssistant:
         self.log_text.see("end")
 
     def detect_board(self):
-        self.board_label.config(text="Arduino : recherche...", fg="#a6adc8")
+        self.board_label.config(text="Arduino : recherche...", fg=CESI_GRAY_TEXT)
+        self.board_indicator.config(fg=CESI_GRAY_TEXT)
         threading.Thread(target=self._detect_board_thread, daemon=True).start()
 
     def _detect_board_thread(self):
@@ -106,24 +152,25 @@ class ArduinoAssistant:
                 if "arduino:" in line.lower():
                     parts = line.split()
                     port = parts[0]
-                    # Find FQBN (looks like arduino:something:something)
                     fqbn_match = re.search(r'(arduino:\S+:\S+)', line)
                     if fqbn_match:
                         self.board_port = port
                         self.board_fqbn = fqbn_match.group(1)
-                        # Find board name
                         name_match = re.search(r'(Arduino\s+\S+(?:\s+\S+)?)\s+arduino:', line)
                         name = name_match.group(1) if name_match else self.board_fqbn
                         self.root.after(0, lambda: self.board_label.config(
-                            text=f"Arduino : {name} sur {self.board_port}", fg="#a6e3a1"))
+                            text=f"Arduino : {name} sur {self.board_port}", fg=CESI_GREEN))
+                        self.root.after(0, lambda: self.board_indicator.config(fg=CESI_GREEN))
                         self.root.after(0, lambda: self.log(f"Board detecte : {name} sur {self.board_port}"))
                         return
             self.root.after(0, lambda: self.board_label.config(
-                text="Arduino : non detecte - branche ton Arduino et clique Detecter", fg="#f38ba8"))
+                text="Arduino : non detecte - branche ton Arduino et clique Detecter", fg=CESI_RED))
+            self.root.after(0, lambda: self.board_indicator.config(fg=CESI_RED))
             self.root.after(0, lambda: self.log("Aucun Arduino detecte."))
         except Exception as e:
             self.root.after(0, lambda: self.board_label.config(
-                text=f"Erreur detection : {e}", fg="#f38ba8"))
+                text=f"Erreur detection : {e}", fg=CESI_RED))
+            self.root.after(0, lambda: self.board_indicator.config(fg=CESI_RED))
 
     def on_send(self):
         api_key = self.api_key_var.get().strip()
@@ -139,14 +186,13 @@ class ArduinoAssistant:
             messagebox.showwarning("Prompt vide", "Decris ce que tu veux que l'Arduino fasse !")
             return
 
-        self.send_btn.config(state="disabled", text="En cours...")
+        self.send_btn.config(state="disabled", text="EN COURS...", bg=CESI_GRAY_TEXT)
         self.code_text.delete("1.0", "end")
         self.log_text.delete("1.0", "end")
         threading.Thread(target=self._process, args=(api_key, prompt), daemon=True).start()
 
     def _process(self, api_key, prompt):
         try:
-            # Step 1: Generate code with Claude
             self.root.after(0, lambda: self.log("Envoi de la demande a l'IA..."))
             code = self._ask_claude(api_key, prompt)
             if not code:
@@ -155,7 +201,6 @@ class ArduinoAssistant:
             self.root.after(0, lambda: self.code_text.insert("1.0", code))
             self.root.after(0, lambda: self.log("Code genere avec succes !"))
 
-            # Step 2: Compile
             self.root.after(0, lambda: self.log("Compilation en cours..."))
             sketch_dir = self._write_sketch(code)
             result = subprocess.run(
@@ -167,7 +212,6 @@ class ArduinoAssistant:
                 return
             self.root.after(0, lambda: self.log("Compilation OK !"))
 
-            # Step 3: Upload
             self.root.after(0, lambda: self.log("Upload sur l'Arduino..."))
             result = subprocess.run(
                 [ARDUINO_CLI, "upload", "--fqbn", self.board_fqbn,
@@ -183,7 +227,8 @@ class ArduinoAssistant:
             self.root.after(0, lambda: self.log(f"ERREUR : {e}"))
         finally:
             self.root.after(0, lambda: self.send_btn.config(
-                state="normal", text="Generer et Envoyer sur Arduino"))
+                state="normal", text="GENERER ET ENVOYER SUR ARDUINO",
+                bg=CESI_YELLOW))
 
     def _ask_claude(self, api_key, prompt):
         import anthropic
@@ -202,7 +247,6 @@ class ArduinoAssistant:
             messages=[{"role": "user", "content": prompt}]
         )
         code = message.content[0].text.strip()
-        # Clean up markdown fences if present
         code = re.sub(r'^```(?:cpp|c|arduino|ino)?\s*\n', '', code)
         code = re.sub(r'\n```\s*$', '', code)
         return code

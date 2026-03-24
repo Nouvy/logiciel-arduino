@@ -1,0 +1,62 @@
+name: Build Installers
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller anthropic
+
+      - name: Build EXE
+        run: |
+          pyinstaller --windowed --onefile --name "Arduino-Assistant-CESI" --clean arduino_assistant.py
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arduino-Assistant-CESI-Windows
+          path: dist/Arduino-Assistant-CESI.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller anthropic
+
+      - name: Build APP
+        run: |
+          pyinstaller --windowed --onedir --name "Arduino Assistant CESI" --clean arduino_assistant.py
+
+      - name: Create DMG
+        run: |
+          mkdir -p dmg_content
+          cp -R "dist/Arduino Assistant CESI.app" dmg_content/
+          ln -sf /Applications dmg_content/Applications
+          hdiutil create -volname "Arduino Assistant CESI" -srcfolder dmg_content -ov -format UDZO "dist/Arduino-Assistant-CESI.dmg"
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arduino-Assistant-CESI-macOS
+          path: dist/Arduino-Assistant-CESI.dmg
